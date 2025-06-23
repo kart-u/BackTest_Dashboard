@@ -1,0 +1,24 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+build/
+
+# Uploaded/generated files
+*.csv
+output/
+*.log
+
+# FastAPI/Uvicorn
+*.db
+*.sqlite3
+
+# VSCode
+.vscode/
+*.code-workspace
+
+
