@@ -1,24 +1,38 @@
-# Python bytecode
+# Python bytecode and cache
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
+
+# VSCode or editor temp files
+.vscode/
+*.swp
+*~
+*.bak
+*.tmp
+
+# Build and packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# PyCharm IDE settings
+.idea/
+
+# Environment files
+.env
+*.env
 
 # Virtual environments
+venv/
 .venv/
-build/
 
-# Uploaded/generated files
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# VSCode debug temp file
+*tempCodeRunnerFile.py
+
+# CSV files
 *.csv
-output/
-*.log
-
-# FastAPI/Uvicorn
-*.db
-*.sqlite3
-
-# VSCode
-.vscode/
-*.code-workspace
-
-

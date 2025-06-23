@@ -1,16 +1,9 @@
 import ccxt
 import pandas as pd
-from pydantic import BaseModel
-from typing import List
+from Model.Home import exchangesSymbolData
 
-class exchangesSymbolData(BaseModel):
-    exchanges:List[str]
-    symbols:List[str]
-    timeframe:str
-    market:str
-    limit:int
 
-def getData(inputData:exchangesSymbolData):
+async def getData(inputData:exchangesSymbolData):
     for ex in inputData.exchanges:
         for sym in inputData.symbols:
             options = {'defaultType': inputData.market} if (inputData.market.lower()!='spot') else {} 
@@ -30,19 +23,8 @@ def getData(inputData:exchangesSymbolData):
                 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
                 filename:str = f"{sym.upper()}_{inputData.market}_{ex}.csv"
                 df.to_csv(filename, index=False)
-                print(f"Data for saved on {filename}:\n", df.head())
+                print(f"Data for saved on {filename}:\n")
             
             except Exception as error:
                 print(f"Error while fetching data {error}")
 
-      
-            
-# Testing Patch:-
-# class inputData(exchangesSymbolData):
-#     exchanges:List[str]=['binance','bybit']
-#     symbols:List[str]=['btc','eth']
-#     timeframe:str='1d'
-#     market:str='spot'
-#     limit:int=100
-
-# getData(inputData())
