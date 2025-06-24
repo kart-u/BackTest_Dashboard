@@ -1,11 +1,13 @@
 import pandas as pd
-from fastapi import APIRouter,File,UploadFile,Body,status,Query
+from fastapi import APIRouter,File,UploadFile,Body,status,Query,HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Annotated,Dict,List,Tuple
 from Model.strategyGraph import graphParams,strategyParams,executionParams,riskParams
+from Model.Home import exchangesSymbolData
 import os,glob,re
 from datetime import datetime
+from API.Strategy.backtest import verifyStrategy
 
 router=APIRouter()
 
@@ -30,7 +32,7 @@ async def graph(data:graphParams,From:Annotated[datetime|None,Query()],To:Annota
     df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
 
     if df['timestamp'].isnull().any():
-        raise ValueError("Some timestamps could not be parsed into datetime.")
+        raise HTTPException(status_code=400,detail="Some timestamps could not be parsed into datetime.")
     
     df = df[(df["timestamp"] >= From) & (df["timestamp"] <= To)]
     
@@ -79,8 +81,29 @@ async def dataOptions():
 @router.post("/backtest")
 async def backtest(strategyParams:Annotated[strategyParams,Body()],
                    executionParams:Annotated[executionParams,Body()],
-                   riskParams:Annotated[riskParams,Body()]
+                   riskParams:Annotated[riskParams,Body()],
+                   selected:Annotated[exchangesSymbolData,Body()]
                    ):
     
+    if not verifyStrategy(strategyParams):
+        raise HTTPException(status_code=400,detail="Wrong Strategy Format")
+    
+
+    dataframe:Dict[Tuple[str,str,str],]=dict()
+    len=None
+    for exchange in selected.exchanges:
+        for symbol in selected.symbols:
+            market=selected.market
+            path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../",
+                    f"{symbol.upper()}_{market.lower()}_{exchange.lower()}.csv"
+                    ))
+            if not os.path.isfile(path):
+                raise HTTPException(status_code=400,detail="File not found")
+            df=pd.read_csv(path)
+            len=len(df)
+            dataframe[(symbol.upper(),market.lower(),exchange.lower())]=df
+    
+
+
     return {"google"}
 

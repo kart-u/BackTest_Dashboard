@@ -33,15 +33,11 @@ class strategyParams(BaseModel):
     rsi:int|None=None
     macdSignal:int|None=None
     
-class orderType(BaseModel):
-    order:str  #Market or limit
-    longOrder:str|None=None
-    shortOrder:str|None=None
 class executionParams(BaseModel):
-    orderType:orderType
+    orderType:int|None=None
     feeBps:int
     slipBps:int
-    percentPortfolioToTrade:int
+    portfolioAmount:int
 
 
 class riskParams(BaseModel):

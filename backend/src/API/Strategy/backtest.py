@@ -1,8 +1,9 @@
 from Model.strategyGraph import strategyParams,riskParams,executionParams
 from Model.Home import exchangesSymbolData
 from pyparsing import Word, alphas, Literal, infixNotation, opAssoc
-from typing import List,Dict
-import pandas as pd,re
+from typing import List,Dict,Tuple
+import pandas as pd,os,glob
+from fastapi import HTTPException
 
 def checkRelation(relation:str):
     return (
@@ -49,7 +50,7 @@ def parseCondition(value:str):
     try:
         condition=boolExpr.parseString(value,parseAll=True).asList()
     except Exception as e:
-        raise ValueError("Wrong format string")
+        raise HTTPException(status_code=400,detail="Wrong format string")
     return condition
 
 
@@ -110,7 +111,7 @@ def recurCheck(condition:List,map:Dict):
             elif value not in {"NOT","!"}:
 
                 if value not in map.keys():
-                    raise ValueError("Relation not defined")
+                    raise HTTPException(status_code=400,detail="Relation not defined correctly")
                 
                 if previousBoolean==None:
                     previousBoolean=map[value]
@@ -145,7 +146,7 @@ def compare(val1: float, val2: float, relation: str) -> bool:
     elif relation in [">="]:
         return val1 >= val2
     else:
-        raise ValueError(f"Unsupported relation: {relation}")
+        raise HTTPException(status_code=400,detail=f"Unsupported relation: {relation}")
     
 
 # returning signal according to conditon
@@ -236,6 +237,12 @@ def calculateIndicator(strategy:strategyParams,df:pd.DataFrame):
             else:
                 df[key]=calculateRsi(df,value)
     return
+
+# Actuall backtesting accross all symbols and exchange
+# def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],len:int,
+#                      strategy:strategyParams,execution:executionParams,risk:riskParams
+#                     ):
+#     for index in range(len):
 
 
 

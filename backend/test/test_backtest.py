@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-
+from fastapi import HTTPException
 from Model.strategyGraph import EMA,MACD,RSI,tradeType,strategyParams
 from API.Strategy.backtest import (
     checkRelation,
@@ -88,7 +88,7 @@ def test_compare():
     assert compare(5, 10, "<") is True
     assert compare(10, 5, ">") is True
     assert compare(5, 5, "==") is True
-    with pytest.raises(ValueError):
+    with pytest.raises(HTTPException):
         compare(1, 2, "!=")
 
 
@@ -132,7 +132,7 @@ def test_return_signal_true():
 
     assert signal == 1
     assert signal2 == 1
-    with pytest.raises(ValueError):
+    with pytest.raises(HTTPException):
         returnSignal(value, 0, df, 1)
 
 

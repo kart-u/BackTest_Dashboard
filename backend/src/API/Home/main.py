@@ -1,5 +1,5 @@
 import pandas as pd
-from fastapi import APIRouter,File,UploadFile,Body,status
+from fastapi import APIRouter,File,UploadFile,Body,status,HTTPException
 from fastapi.responses import JSONResponse
 from typing import Annotated
 from io import StringIO
@@ -50,4 +50,4 @@ async def selectFile(csv:Annotated[UploadFile,File()]):
             status_code=status.HTTP_200_OK
         )
     except Exception as e:
-        raise ValueError("File in wrong format")
+        raise HTTPException(status_code=400,detail="File in wrong format")

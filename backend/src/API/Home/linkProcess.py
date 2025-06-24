@@ -1,6 +1,7 @@
 import ccxt
 import pandas as pd
 from Model.Home import exchangesSymbolData
+from fastapi import HTTPException
 
 
 async def getData(inputData:exchangesSymbolData):
@@ -18,7 +19,7 @@ async def getData(inputData:exchangesSymbolData):
                 continue
 
             try:
-                ohlcv=exchange.fetch_ohlcv(symbol, timeframe=inputData.timeframe, limit=inputData.limit)
+                ohlcv=exchange.fetch_ohlcv(symbol, timeframe='1d', limit=inputData.limit)
                 df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
                 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
                 filename:str = f"{sym.upper()}_{inputData.market}_{ex}.csv"
@@ -26,5 +27,6 @@ async def getData(inputData:exchangesSymbolData):
                 print(f"Data for saved on {filename}:\n")
             
             except Exception as error:
-                print(f"Error while fetching data {error}")
+                raise HTTPException(status_code=400,detail="Error while fetching data")
+
 
