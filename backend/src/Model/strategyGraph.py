@@ -27,12 +27,17 @@ class tradeType(BaseModel):
     condition:str
 
 class strategyParams(BaseModel):
-    long:tradeType|None
-    short:tradeType|None
+    longEnter:tradeType|None
+    longExit:tradeType|None
+    shortEnter:tradeType|None
+    shortExit:tradeType|None
     
-
+class orderType(BaseModel):
+    order:str
+    longOrder:str|None
+    shortOrder:str|None
 class executionParams(BaseModel):
-    orderType:str
+    orderType:orderType
     feeBps:int
     slipBps:int
     percentPortfolioToTrade:int
@@ -43,42 +48,3 @@ class riskParams(BaseModel):
     takeProfit:int
 
 
-
-
-# Examples
-exampleStrategy = strategyParams(
-    long=tradeType(
-        ema=EMA(
-            emaSmallPeriod=9,
-            emaLargePeriod=21,
-            relation="=="
-        ),
-        macd=MACD(
-            signalPeriod=9,
-            relation="=="
-        ),
-        rsi=RSI(
-            signalPeriod=14,
-            value=30,
-            relation="=="
-        ),
-        condition="(EMA AND MECD) || RSI"
-    ),
-    short=tradeType(
-        ema=EMA(
-            emaSmallPeriod=9,
-            emaLargePeriod=21,
-            relation="crosses_below"
-        ),
-        macd=MACD(
-            signalPeriod=9,
-            relation="less_than"
-        ),
-        rsi=RSI(
-            signalPeriod=14,
-            value=70,
-            relation="greater_than"
-        ),
-        condition="EMA && (MACD || RSI)"
-    )
-)
