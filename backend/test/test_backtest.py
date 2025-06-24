@@ -35,48 +35,34 @@ df = pd.DataFrame([
 exampleStrategy = strategyParams(
     longEnter=tradeType(
         ema=EMA(
-            emaSmallPeriod=9,
-            emaLargePeriod=21,
             relation=">"
         ),
         macd=MACD(
-            signalPeriod=9,
             relation=">"
         ),
         rsi=RSI(
-            signalPeriod=14,
             value=30,
             relation="<"
         ),
         condition="(EMAC && MACDC) || RSIC"
     ),
     longExit=tradeType(
-        ema=None,
-        macd=None,
-        rsi=None,
         condition=""
     ),
     shortEnter=tradeType(
         ema=EMA(
-            emaSmallPeriod=5,
-            emaLargePeriod=20,
             relation="<"
         ),
         macd=MACD(
-            signalPeriod=12,
             relation="<"
         ),
         rsi=RSI(
-            signalPeriod=14,
             value=70,
             relation=">"
         ),
         condition="EMAC || (MACDC AND RSIC)"
     ),
     shortExit=tradeType(
-        ema=None,
-        macd=None,
-        rsi=None,
         condition=""
     )
 )

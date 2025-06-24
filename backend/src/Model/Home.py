@@ -7,3 +7,6 @@ class exchangesSymbolData(BaseModel):
     timeframe:str
     market:str
     limit:int
+    leverage:int|None=None
+
+    

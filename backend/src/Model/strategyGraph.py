@@ -7,35 +7,36 @@ class graphParams(BaseModel):
     market:str
 
 class EMA(BaseModel):
-    emaSmallPeriod:int
-    emaLargePeriod:int
     relation:str
 
 class MACD(BaseModel):
-    signalPeriod:int
     relation:str
 
 class RSI(BaseModel):
-    signalPeriod:int
     value:int
     relation:str
 
 class tradeType(BaseModel):
-    ema:EMA|None
-    macd:MACD|None
-    rsi:RSI|None
+    ema:EMA|None=None
+    macd:MACD|None=None
+    rsi:RSI|None=None
     condition:str
 
+
 class strategyParams(BaseModel):
-    longEnter:tradeType|None
-    longExit:tradeType|None
-    shortEnter:tradeType|None
-    shortExit:tradeType|None
+    longEnter:tradeType|None=None
+    longExit:tradeType|None=None
+    shortEnter:tradeType|None=None
+    shortExit:tradeType|None=None
+    emaSmall:int|None=None
+    emaLarge:int|None=None
+    rsi:int|None=None
+    macdSignal:int|None=None
     
 class orderType(BaseModel):
-    order:str
-    longOrder:str|None
-    shortOrder:str|None
+    order:str  #Market or limit
+    longOrder:str|None=None
+    shortOrder:str|None=None
 class executionParams(BaseModel):
     orderType:orderType
     feeBps:int
@@ -44,7 +45,7 @@ class executionParams(BaseModel):
 
 
 class riskParams(BaseModel):
-    stopLoss:int
-    takeProfit:int
+    stopLoss:int|None=None
+    takeProfit:int|None=None
 
 

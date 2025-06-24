@@ -2,7 +2,7 @@ from Model.strategyGraph import strategyParams,riskParams,executionParams
 from Model.Home import exchangesSymbolData
 from pyparsing import Word, alphas, Literal, infixNotation, opAssoc
 from typing import List,Dict
-import pandas as pd
+import pandas as pd,re
 
 def checkRelation(relation:str):
     return (
@@ -177,6 +177,7 @@ def returnSignal(value,index:int,df:pd.DataFrame,signal:int):
 
 
 
+
 #checking for a all possible entry exits 
 def checkCondition(strategy:strategyParams,df:pd.DataFrame,index:int):
     # +1 -1 long buy,exit , +2 -2 short sell,exit
@@ -197,13 +198,49 @@ def checkCondition(strategy:strategyParams,df:pd.DataFrame,index:int):
             sig=returnSignal(value,index,df,-2)
             if sig!=0:
                 signals.append(sig)
-        else:
+        elif key=='shortExit':
             sig=returnSignal(value,index,df,2)
             if sig!=0:
                 signals.append(sig)
+        else:
+            continue
 
     return signals 
     
+
+def calculateRsi(df:pd.DataFrame, period:int):
+    delta = df['close'].diff()
+
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
+
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+
+    rs = avg_gain / avg_loss
+    rsi = 100 - (100 / (1 + rs))
+
+    return rsi
+
+
+def calculateIndicator(strategy:strategyParams,df:pd.DataFrame):
+    for key,value in strategy.model_dump().items():
+        if key not in ['longEnter','longExit','shortEnter','shortExit']:
+            if key in ['emaSmall','emaLarge']:
+                df[key] = df["close"].ewm(span=value, adjust=False).mean()
+            elif key=='macdSignal':
+                short_ema = df["close"].ewm(span=12, adjust=False).mean()
+                long_ema = df["close"].ewm(span=26, adjust=False).mean()
+                df["macd"] = short_ema - long_ema
+                df[key] = df["macd"].ewm(span=value, adjust=False).mean()
+            else:
+                df[key]=calculateRsi(df,value)
+    return
+
+
+
+
+
 
 
             
