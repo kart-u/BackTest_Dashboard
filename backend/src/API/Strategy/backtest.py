@@ -281,8 +281,9 @@ def atindex(
             pnlFrac = ((price - entryPrice) / entryPrice) * lev
             feeFrac = 2 * bps * lev
             flag[key]["returns"] += (pnlFrac - feeFrac) * port
+            flag[key]["pnl"] += (pnlFrac - feeFrac)
             flag[key]["total"] += 1
-            flag[key]["win"] += ((pnlFrac - feeFrac)>=1)
+            flag[key]["win"] += int(((pnlFrac - feeFrac)>=0))
             flag[key].update(check=0, prevPrice=0)
 
 
@@ -295,8 +296,9 @@ def atindex(
             pnlFrac = ((entryPrice - price) / entryPrice) * lev
             feeFrac = 2 * bps * lev
             flag[key]["returns"] += (pnlFrac - feeFrac) * port
+            flag[key]["pnl"] += (pnlFrac - feeFrac)
             flag[key]["total"] += 1
-            flag[key]["win"] += ((pnlFrac - feeFrac)>=1)
+            flag[key]["win"] += int(((pnlFrac - feeFrac)>=0))
             flag[key].update(check=0, prevPrice=0)
 
 
@@ -308,7 +310,7 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
     flag=dict()
     maxDrawdown=0
     peak=0
-    df = pd.DataFrame(columns=['equity', 'maxDrawdown', 'totalTrades', 'winTrades'])
+    df = pd.DataFrame(columns=['equity', 'maxDrawdown', 'totalTrades', 'winTrades','pnl'])
     start = max([x for x in [strategy.emaLarge, strategy.emaSmall, strategy.rsi, strategy.macdSignal] if x is not None] + [0])
     for index in range(length):
         if index<start:
@@ -320,18 +322,21 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
                     "prevPrice": 0.0,
                     "returns": 0.0, 
                     "win":0,
-                    "total":0    
+                    "total":0,
+                    "pnl" :0 
                 }
-            atindex(index,value,risk,execution,flag,strategy,key,(execution.portfolio/len(dataframes)))
+            atindex(index,value,risk,execution,flag,strategy,key,execution.portfolio)
 
         total_returns = sum(flag[k].get("returns", 0) for k in flag.keys())
         total = sum(flag[k].get("total", 0) for k in flag.keys())
         win = sum(flag[k].get("win", 0) for k in flag.keys())
+        print(win)
+        pnl=sum(flag[k].get("pnl", 0) for k in flag.keys())
         equity = execution.portfolio + total_returns
         peak = max(peak, equity)
         drawdown = (peak - equity) / peak  # as percentage
         maxDrawdown = max(maxDrawdown, drawdown)
-        df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win}
+        df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win,'pnl':pnl}
 
         
     df['returns'] = df['equity'].pct_change().fillna(0)
