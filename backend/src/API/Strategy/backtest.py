@@ -4,6 +4,7 @@ from pyparsing import Word, alphas, Literal, infixNotation, opAssoc
 from typing import List,Dict,Tuple
 import pandas as pd,os,glob
 from fastapi import HTTPException
+import numpy as np
 
 def checkRelation(relation:str):
     return (
@@ -182,6 +183,7 @@ def returnSignal(value,index:int,df:pd.DataFrame,signal:int):
 #checking for a all possible entry exits 
 def checkCondition(strategy:strategyParams,df:pd.DataFrame,index:int):
     # +1 -1 long buy,exit , +2 -2 short sell,exit
+
     signals=list()
     for key,value in strategy.model_dump().items():
         if value==None:
@@ -238,11 +240,106 @@ def calculateIndicator(strategy:strategyParams,df:pd.DataFrame):
                 df[key]=calculateRsi(df,value)
     return
 
+
+# At every index
+def atindex(
+    index: int,
+    df: pd.DataFrame,
+    risk: riskParams,
+    execution: executionParams,
+    flag: Dict[Tuple[str,str,str], Dict],
+    strategy: strategyParams,
+    key: Tuple[str, str, str],
+    port:int
+):
+    price = df.iloc[index]["close"]
+    lev = execution.leverage
+    bps = execution.feeBps / 10000  
+
+    # convert stop/tp to decimals, default 0
+    sl = (risk.stopLoss or 0) / 100
+    tp = (risk.takeProfit or 0) / 100
+
+    signals = checkCondition(strategy, df, index)
+    state = flag[key]["check"]
+    entryPrice = flag[key].get("prevPrice", 0)
+
+
+    if state == 0:
+        if 1 in signals:       # long entry
+            flag[key].update(check=1, prevPrice=price, entryIndex=index)
+        elif -2 in signals:    # short entry
+            flag[key].update(check=-1, prevPrice=price, entryIndex=index)
+
+
+    elif state == 1:
+        stopHit = sl > 0 and price <= entryPrice * (1 - sl)
+        tpHit   = tp > 0 and price >= entryPrice * (1 + tp)
+        exitSig = -1 in signals
+
+        if stopHit or tpHit or exitSig:
+            pnlFrac = ((price - entryPrice) / entryPrice) * lev
+            feeFrac = 2 * bps * lev
+            flag[key]["returns"] += (pnlFrac - feeFrac) * port
+            flag[key]["total"] += 1
+            flag[key]["win"] += ((pnlFrac - feeFrac)>=1)
+            flag[key].update(check=0, prevPrice=0)
+
+
+    elif state == -1:
+        stopHit = sl > 0 and price >= entryPrice * (1 + sl)
+        tpHit   = tp > 0 and price <= entryPrice * (1 - tp)
+        exitSig = 2 in signals
+
+        if stopHit or tpHit or exitSig:
+            pnlFrac = ((entryPrice - price) / entryPrice) * lev
+            feeFrac = 2 * bps * lev
+            flag[key]["returns"] += (pnlFrac - feeFrac) * port
+            flag[key]["total"] += 1
+            flag[key]["win"] += ((pnlFrac - feeFrac)>=1)
+            flag[key].update(check=0, prevPrice=0)
+
+
 # Actuall backtesting accross all symbols and exchange
-# def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],len:int,
-#                      strategy:strategyParams,execution:executionParams,risk:riskParams
-#                     ):
-#     for index in range(len):
+def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int,
+                     strategy:strategyParams,execution:executionParams,risk:riskParams
+                    ):
+    
+    flag=dict()
+    maxDrawdown=0
+    peak=0
+    df = pd.DataFrame(columns=['equity', 'maxDrawdown', 'totalTrades', 'winTrades'])
+    start = max([x for x in [strategy.emaLarge, strategy.emaSmall, strategy.rsi, strategy.macdSignal] if x is not None] + [0])
+    for index in range(length):
+        if index<start:
+            continue
+        for key,value in dataframes.items():
+            if key not in flag.keys():
+                flag[key] = {
+                    "check": 0,
+                    "prevPrice": 0.0,
+                    "returns": 0.0, 
+                    "win":0,
+                    "total":0    
+                }
+            atindex(index,value,risk,execution,flag,strategy,key,(execution.portfolio/len(dataframes)))
+
+        total_returns = sum(flag[k].get("returns", 0) for k in flag.keys())
+        total = sum(flag[k].get("total", 0) for k in flag.keys())
+        win = sum(flag[k].get("win", 0) for k in flag.keys())
+        equity = execution.portfolio + total_returns
+        peak = max(peak, equity)
+        drawdown = (peak - equity) / peak  # as percentage
+        maxDrawdown = max(maxDrawdown, drawdown)
+        df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win}
+
+        
+    df['returns'] = df['equity'].pct_change().fillna(0)
+    df['sharpe'] = df['returns'].rolling(window=100).apply(
+    lambda x: x.mean() / x.std() if x.std() != 0 else np.nan,
+    raw=True
+    )
+    return df
 
 
 

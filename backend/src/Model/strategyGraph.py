@@ -34,11 +34,9 @@ class strategyParams(BaseModel):
     macdSignal:int|None=None
     
 class executionParams(BaseModel):
-    orderType:int|None=None
+    leverage:int=1
     feeBps:int
-    slipBps:int
-    portfolioAmount:int
-
+    portfolio:int
 
 class riskParams(BaseModel):
     stopLoss:int|None=None

@@ -7,7 +7,7 @@ from Model.strategyGraph import graphParams,strategyParams,executionParams,riskP
 from Model.Home import exchangesSymbolData
 import os,glob,re
 from datetime import datetime
-from API.Strategy.backtest import verifyStrategy
+from API.Strategy.backtest import verifyStrategy,calculateIndicator
 
 router=APIRouter()
 
@@ -100,7 +100,8 @@ async def backtest(strategyParams:Annotated[strategyParams,Body()],
             if not os.path.isfile(path):
                 raise HTTPException(status_code=400,detail="File not found")
             df=pd.read_csv(path)
-            len=len(df)
+            calculateIndicator(strategyParams,df)
+            length=len(df)
             dataframe[(symbol.upper(),market.lower(),exchange.lower())]=df
     
 
