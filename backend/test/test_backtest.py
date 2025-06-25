@@ -134,12 +134,14 @@ def test_atindex_simple_entry_and_exit(monkeypatch):
     execp = executionParams(leverage=1, feeBps=0, portfolio=1000)
     key = ('ex','sym','d1')
     flag = {key:{'check':0,'prevPrice':0.0,'returns':0.0,'total':0,'win':0,'pnl':0}}
-    atindex(0, df, risk, execp, flag, strat, key, port=1000)
+    args=(0, df, risk, execp, flag, strat, key, 1000)
+    atindex(args)
     assert flag[key]['check'] == 1
     assert flag[key]['prevPrice'] == 100.0
     def fakeReturn(value,i,df_,signal): return -1 if i==1 else 0
     monkeypatch.setattr('API.Strategy.backtest.returnSignal', fakeReturn)
-    atindex(1, df, risk, execp, flag, strat, key, port=1000)
+    args=(1, df, risk, execp, flag, strat, key, 1000)
+    atindex(args)
     assert flag[key]['check'] == 0
     assert pytest.approx(flag[key]['returns'], rel=1e-3) == 100.0
 

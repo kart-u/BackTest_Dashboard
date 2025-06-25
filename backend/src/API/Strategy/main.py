@@ -7,11 +7,13 @@ from Model.strategyGraph import graphParams,strategyParams,executionParams,riskP
 from Model.Home import exchangesSymbolData
 import os,glob,re
 from datetime import datetime
-from API.Strategy.backtest import verifyStrategy,calculateIndicator
+from API.Strategy.backtest import verifyStrategy,calculateIndicator,backtestParallel
+from concurrent.futures import ProcessPoolExecutor
+import asyncio
 
 router=APIRouter()
 
-
+executor = ProcessPoolExecutor()
 
 @router.post("/graphOHLCV")
 async def graph(data:graphParams,From:Annotated[datetime|None,Query()],To:Annotated[datetime|None,Query()]):
@@ -104,7 +106,13 @@ async def backtest(strategyParams:Annotated[strategyParams,Body()],
             length=len(df)
             dataframe[(symbol.upper(),market.lower(),exchange.lower())]=df
     
+    df=backtestParallel(dataframe,length,strategyParams,executionParams,riskParams)
 
+    loop = asyncio.get_event_loop()
+    df = await loop.run_in_executor(
+        executor,
+        backtestParallel, dataframe, length, strategyParams, executionParams, riskParams
+    )
 
     return {"google"}
 

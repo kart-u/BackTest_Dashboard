@@ -1,10 +1,10 @@
 from Model.strategyGraph import strategyParams,riskParams,executionParams
-from Model.Home import exchangesSymbolData
 from pyparsing import Word, alphas, Literal, infixNotation, opAssoc
 from typing import List,Dict,Tuple
-import pandas as pd,os,glob
+import pandas as pd
 from fastapi import HTTPException
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor,wait
 
 def checkRelation(relation:str):
     return (
@@ -242,16 +242,8 @@ def calculateIndicator(strategy:strategyParams,df:pd.DataFrame):
 
 
 # At every index
-def atindex(
-    index: int,
-    df: pd.DataFrame,
-    risk: riskParams,
-    execution: executionParams,
-    flag: Dict[Tuple[str,str,str], Dict],
-    strategy: strategyParams,
-    key: Tuple[str, str, str],
-    port:int
-):
+def atindex(args:Tuple):
+    index, df, risk, execution, flag, strategy, key, port = args
     price = df.iloc[index]["close"]
     lev = execution.leverage
     bps = execution.feeBps / 10000  
@@ -311,32 +303,40 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
     maxDrawdown=0
     peak=0
     df = pd.DataFrame(columns=['equity', 'maxDrawdown', 'totalTrades', 'winTrades','pnl'])
-    start = max([x for x in [strategy.emaLarge, strategy.emaSmall, strategy.rsi, strategy.macdSignal] if x is not None] + [0])
-    for index in range(length):
-        if index<start:
-            continue
-        for key,value in dataframes.items():
-            if key not in flag.keys():
-                flag[key] = {
-                    "check": 0,
-                    "prevPrice": 0.0,
-                    "returns": 0.0, 
-                    "win":0,
-                    "total":0,
-                    "pnl" :0 
-                }
-            atindex(index,value,risk,execution,flag,strategy,key,execution.portfolio)
+    flag = {
+        key: {
+            "check": 0,
+            "prevPrice": 0.0,
+            "returns": 0.0, 
+            "win": 0,
+            "total": 0,
+            "pnl": 0
+        } for key in dataframes.keys()
+    }
+    start = max([x for x in [strategy.emaLarge, strategy.emaSmall, strategy.rsi, strategy.macdSignal] if x is not None] + [0])             
+    with ThreadPoolExecutor() as executor:
+        for index in range(length):
+            if index<start:
+                continue    
 
-        total_returns = sum(flag[k].get("returns", 0) for k in flag.keys())
-        total = sum(flag[k].get("total", 0) for k in flag.keys())
-        win = sum(flag[k].get("win", 0) for k in flag.keys())
-        print(win)
-        pnl=sum(flag[k].get("pnl", 0) for k in flag.keys())
-        equity = execution.portfolio + total_returns
-        peak = max(peak, equity)
-        drawdown = (peak - equity) / peak  # as percentage
-        maxDrawdown = max(maxDrawdown, drawdown)
-        df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win,'pnl':pnl}
+            futures = []
+            for key, value in dataframes.items():
+                combination = (index, value, risk, execution, flag, strategy, key, execution.portfolio)
+                futures.append(executor.submit(atindex, combination))
+
+            wait(futures)
+
+
+            total_returns = sum(flag[k].get("returns", 0) for k in flag.keys())
+            total = sum(flag[k].get("total", 0) for k in flag.keys())
+            win = sum(flag[k].get("win", 0) for k in flag.keys())
+            print(win)
+            pnl=sum(flag[k].get("pnl", 0) for k in flag.keys())
+            equity = execution.portfolio + total_returns
+            peak = max(peak, equity)
+            drawdown = (peak - equity) / peak  # as percentage
+            maxDrawdown = max(maxDrawdown, drawdown)
+            df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win,'pnl':pnl}
 
         
     df['returns'] = df['equity'].pct_change().fillna(0)
