@@ -19,8 +19,8 @@ from API.Strategy.backtest import (
 )
 
 df_ind = pd.DataFrame([
-    {'emaSmall': 10, 'emaLarge': 20, 'macd': 1.1, 'macdSignal': 1.0, 'rsi': 25},
-    {'emaSmall': 22, 'emaLarge': 18, 'macd': 0.8, 'macdSignal': 1.1, 'rsi': 72}
+    {'emaSmall': 10, 'emaLarge': 20, 'macd': 1.1, 'macdSignal': 1.0, 'rsi': 25,'timestamp':'1-2-3'},
+    {'emaSmall': 22, 'emaLarge': 18, 'macd': 0.8, 'macdSignal': 1.1, 'rsi': 72,'timestamp':'1-2-3'}
 ])
 
 exampleStrategy = strategyParams(
@@ -146,18 +146,19 @@ def test_atindex_simple_entry_and_exit(monkeypatch):
     assert pytest.approx(flag[key]['returns'], rel=1e-3) == 100.0
 
 def test_backtest_parallel_end_to_end(monkeypatch):
-    df_in = pd.DataFrame({'close': [100, 105, 110]})
+    df_in = pd.DataFrame({'close': [100, 105, 110],'timestamp':'1-2-3'})
     dataframes = {('ex','sym','1d'): df_in}
     strat = exampleStrategy
     monkeypatch.setattr('API.Strategy.backtest.checkCondition', lambda s,df,i: [1, -1])
     risk = riskParams(stopLoss=None, takeProfit=None)
     execp = executionParams(leverage=1, feeBps=0, portfolio=1000)
     result = backtestParallel(dataframes, len(df_in), strat, execp, risk)
-    assert 'equity' in result.columns
-    assert 'maxDrawdown' in result.columns
-    assert 'totalTrades' in result.columns
-    assert 'winTrades' in result.columns
+    result = pd.DataFrame(result)
+    assert 'equity' in result.keys()
+    assert 'maxDrawdown' in result.keys()
+    assert 'totalTrades' in result.keys()
+    assert 'winTrades' in result.keys()
     assert list(result['equity']) == [1000, 1050, 1050]
     assert result['totalTrades'].iloc[-1] == 1
     assert result['winTrades'].iloc[-1] == 1
-    assert 'sharpe' in result.columns
+    assert 'sharpe' in result.keys()

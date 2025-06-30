@@ -3,8 +3,6 @@ from pyparsing import Word, alphas, Literal, infixNotation, opAssoc
 from typing import List,Dict,Tuple
 import pandas as pd
 from fastapi import HTTPException
-import numpy as np
-from concurrent.futures import ThreadPoolExecutor,wait
 
 def checkRelation(relation:str):
     return (
@@ -298,7 +296,7 @@ def atindex(args:Tuple):
 def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int,
                      strategy:strategyParams,execution:executionParams,risk:riskParams
                     ):
-    
+    # print(length)
     flag=dict()
     maxDrawdown=0
     peak=0
@@ -314,43 +312,44 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
         } for key in dataframes.keys()
     }
     start = max([x for x in [strategy.emaLarge, strategy.emaSmall, strategy.rsi, strategy.macdSignal] if x is not None] + [0])             
-    with ThreadPoolExecutor() as executor:
-        for index in range(length):
-            if index<start:
-                continue    
-
-            futures = []
+    for index in range(length):
+        if index<start:
+            equity=execution.portfolio
+            total=0
+            win=0
+            pnl=0.0
+        else:
             for key, value in dataframes.items():
                 combination = (index, value, risk, execution, flag, strategy, key, execution.portfolio)
-                futures.append(executor.submit(atindex, combination))
-
-            wait(futures)
+                atindex(combination)
 
 
-            total_returns = sum(flag[k].get("returns", 0) for k in flag.keys())
-            total = sum(flag[k].get("total", 0) for k in flag.keys())
-            win = sum(flag[k].get("win", 0) for k in flag.keys())
-            # print(win)
-            pnl=sum(flag[k].get("pnl", 0) for k in flag.keys())
-            equity = execution.portfolio + total_returns
-            peak = max(peak, equity)
-            drawdown = (peak - equity) / peak  # as percentage
-            maxDrawdown = max(maxDrawdown, drawdown)
-            df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win,'pnl':pnl}
-
+        total_returns = sum(flag[k].get("returns", 0) for k in flag.keys())
+        total = sum(flag[k].get("total", 0) for k in flag.keys())
+        win = sum(flag[k].get("win", 0) for k in flag.keys())
+        # print(win)
+        pnl=sum(flag[k].get("pnl", 0) for k in flag.keys())
+        equity = execution.portfolio + total_returns
+        peak = max(peak, equity)
+        drawdown = (peak - equity) / peak  # as percentage
+        maxDrawdown = max(maxDrawdown, drawdown)
+        df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win,'pnl':pnl}
+        # print(index)
         
-    # df['returns'] = df['equity'].pct_change().fillna(0)
-    # df['sharpe'] = df['returns'].rolling(window=100).apply(
-    # lambda x: x.mean() / x.std() if x.std() != 0 else np.nan,
-    # raw=True
-    # )
+    df['returns'] = df['equity'].pct_change().fillna(0)
+    df['sharpe'] = df['returns'].mean()/df["returns"].std()
+    firstKey = next(iter(dataframes))
+    df['timestamp']=dataframes[firstKey]['timestamp']
+    # print(len(df))
     return df.astype({
         'equity': float,
         'maxDrawdown': float,
         'totalTrades': int,
         'winTrades': int,
-        'pnl': float
-    }).reset_index(drop=True).to_dict(orient="records")
+        'pnl': float,
+        'returns':float,
+        'sharpe':float
+    }).to_dict(orient="records")
 
 
 

@@ -110,6 +110,6 @@ async def backtest(strategyParams:Annotated[strategyParams,Body()],
         executor,
         backtestParallel, dataframe, length, strategyParams, executionParams, riskParams
     )
-    
+    # print(len(df))
     return df
 
