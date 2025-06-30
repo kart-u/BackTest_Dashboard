@@ -11,7 +11,7 @@ router=APIRouter()
 
 
 @router.post("/linkMethod")
-async def selectLink(exchange:Annotated[exchangesSymbolData,Body()]):
+async def selectLink(exchange:Annotated[exchangesSymbolData,Body(embed=True)]):
 
     baseDir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
     csvFiles = glob.glob(os.path.join(baseDir, "*.csv"))

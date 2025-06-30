@@ -1,4 +1,4 @@
-from Model.strategyGraph import strategyParams,riskParams,executionParams
+from Model.strategyGraph import strategyParams,riskParams,executionParams,tradeType
 from pyparsing import Word, alphas, Literal, infixNotation, opAssoc
 from typing import List,Dict,Tuple
 import pandas as pd
@@ -61,8 +61,8 @@ def verifyStrategy(strategy:strategyParams):
     if not strategy.model_dump():
         return False   
 
-    for tradeType,indicators in strategy.model_dump().items():
-        if indicators==None:
+    for t,indicators in strategy.model_dump().items():
+        if indicators==None or not isinstance(indicators,tradeType):
                 continue
         for key,value in indicators.items():
             if value==None:
@@ -170,11 +170,11 @@ def returnSignal(value,index:int,df:pd.DataFrame,signal:int):
         else:
             key3=key2.upper()+'C'
             if key2=="ema":
-                map[key3]=compare(df.iloc[index]['emaSmall'],df.iloc[index]['emaLarge'],value2['relation'])
+                map[key3]=compare(df.at[index, 'emaSmall'] ,df.at[index, 'emaLarge'] ,value2['relation'])
             elif key2=="macd":
-                map[key3]=compare(df.iloc[index]['macd'],df.iloc[index]['macdSignal'],value2['relation'])
+                map[key3]=compare(df.at[index, 'macd'] ,df.at[index, 'macdSignal'] ,value2['relation'])
             else:
-                map[key3]=compare(df.iloc[index]['rsi'],value2['value'],value2['relation'])
+                map[key3]=compare(df.at[index, 'rsi'] ,value2['value'],value2['relation'])
     return 0
 
 
@@ -244,7 +244,7 @@ def calculateIndicator(strategy:strategyParams,df:pd.DataFrame):
 # At every index
 def atindex(args:Tuple):
     index, df, risk, execution, flag, strategy, key, port = args
-    price = df.iloc[index]["close"]
+    price = df.at[index, 'close'] 
     lev = execution.leverage
     bps = execution.feeBps / 10000  
 
@@ -330,7 +330,7 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
             total_returns = sum(flag[k].get("returns", 0) for k in flag.keys())
             total = sum(flag[k].get("total", 0) for k in flag.keys())
             win = sum(flag[k].get("win", 0) for k in flag.keys())
-            print(win)
+            # print(win)
             pnl=sum(flag[k].get("pnl", 0) for k in flag.keys())
             equity = execution.portfolio + total_returns
             peak = max(peak, equity)
@@ -339,12 +339,19 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
             df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win,'pnl':pnl}
 
         
-    df['returns'] = df['equity'].pct_change().fillna(0)
-    df['sharpe'] = df['returns'].rolling(window=100).apply(
-    lambda x: x.mean() / x.std() if x.std() != 0 else np.nan,
-    raw=True
-    )
-    return df
+    # df['returns'] = df['equity'].pct_change().fillna(0)
+    # df['sharpe'] = df['returns'].rolling(window=100).apply(
+    # lambda x: x.mean() / x.std() if x.std() != 0 else np.nan,
+    # raw=True
+    # )
+    return df.astype({
+        'equity': float,
+        'maxDrawdown': float,
+        'totalTrades': int,
+        'winTrades': int,
+        'pnl': float
+    }).reset_index(drop=True).to_dict(orient="records")
+
 
 
 

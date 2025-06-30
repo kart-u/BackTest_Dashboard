@@ -92,7 +92,6 @@ async def backtest(strategyParams:Annotated[strategyParams,Body()],
     
 
     dataframe:Dict[Tuple[str,str,str],]=dict()
-    len=None
     for exchange in selected.exchanges:
         for symbol in selected.symbols:
             market=selected.market
@@ -105,14 +104,12 @@ async def backtest(strategyParams:Annotated[strategyParams,Body()],
             calculateIndicator(strategyParams,df)
             length=len(df)
             dataframe[(symbol.upper(),market.lower(),exchange.lower())]=df
-    
-    df=backtestParallel(dataframe,length,strategyParams,executionParams,riskParams)
 
     loop = asyncio.get_event_loop()
     df = await loop.run_in_executor(
         executor,
         backtestParallel, dataframe, length, strategyParams, executionParams, riskParams
     )
-
-    return {"google"}
+    
+    return df
 
