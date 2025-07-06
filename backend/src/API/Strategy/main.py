@@ -16,7 +16,7 @@ router=APIRouter()
 executor = ProcessPoolExecutor()
 
 @router.post("/graphOHLCV")
-async def graph(data:graphParams,From:Annotated[datetime|None,Query()],To:Annotated[datetime|None,Query()]):
+async def graph(data:graphParams,Limit:Annotated[int,Query()]=0):
 
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../",
             f"{data.symbol.upper()}_{data.market.lower()}_{data.exchange.lower()}.csv"
@@ -27,7 +27,7 @@ async def graph(data:graphParams,From:Annotated[datetime|None,Query()],To:Annota
             content={"message":"File Not found"},
             status_code=status.HTTP_404_NOT_FOUND
         )
-    print(From, To)
+
     df=pd.DataFrame()
     df = pd.read_csv(path) 
 
@@ -36,7 +36,7 @@ async def graph(data:graphParams,From:Annotated[datetime|None,Query()],To:Annota
     if df['timestamp'].isnull().any():
         raise HTTPException(status_code=400,detail="Some timestamps could not be parsed into datetime.")
     
-    df = df[(df["timestamp"] >= From) & (df["timestamp"] <= To)]
+    df = df[:Limit+1]
     
     df['timestamp'] = df['timestamp'].astype(str)
 
