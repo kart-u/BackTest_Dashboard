@@ -119,4 +119,9 @@
   }
 }
 
-*{user-select: none;}
+.chartWrapperDiv svg{
+  cursor:grab;
+}
+.chartWrapperDiv svg:active{
+  cursor: grabbing;
+}
