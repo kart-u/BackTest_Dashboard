@@ -1,12 +1,11 @@
 import React from 'react'
 import './App.css'
-import ChartAreaInteractive from './components/chart'
-
+import Result from './pages/Result'
 function App() {
 
   return (
     <>
-      <ChartAreaInteractive/>
+      <Result/>
     </>
   )
 }

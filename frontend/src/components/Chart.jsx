@@ -174,7 +174,7 @@ export default function ChartAreaInteractive() {
   const filteredData = chartData.slice(visibleDate, visibleDate + VISIBLE_COUNT)
 
   return (
-    <Card className="p-4 m-4 bg-green-50">
+    <Card className="p-4 m-4">
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
         <div
           className={`w-full h-full select-none chartWrapperDiv`}
