@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { TestTube } from "lucide-react";
+import axios from "axios";
 
 export default function Home() {
   const {
@@ -19,13 +19,24 @@ export default function Home() {
     setValue,
     formState: { errors },
   } = useForm();
-
+  const [isloading,setLoading]=useState(false);
   const onSubmit = (data) => {
-    console.log("Submitted data:", data);
-    console.log("Submitted data:", errors);
-    console.log("Submitted data:", register('kartu.king'));
+    setLoading(true)
+    console.log("Submitted data:", data.formData);
+    axios.post("http://127.0.0.1:8000/api/linkMethod",data.formData).then(
+      (res)=>{
+        setLoading(false)
+        console.log(res.status)
+      }
+    ).finally(()=>console.log('done'))
   };
-
+  if(isloading){
+    return(
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      </div>
+    )
+  }
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -36,16 +47,17 @@ export default function Home() {
         <Input
           id="coinName"
           placeholder="e.g., BTC"
-          {...register("coinName", { required: "Coin name is required" })}
+          {...register("formData.symbols.0", { required: "Coin name is required" })}
         />
-        {errors.coinName && (
-          <p className="text-sm text-red-500">{errors.coinName.message}</p>
+
+        {(errors.formData?.symbols) && (
+          <p className="text-sm text-red-500">{errors.formData?.symbols.message}</p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="market">Select Market</Label>
-        <Select onValueChange={(value) => setValue("market", value)}>
+        <Label htmlFor="market">Select Exchange</Label>
+        <Select required onValueChange={(value) => {setValue("formData.exchanges.0", value);}}>
           <SelectTrigger>
             <SelectValue placeholder="Choose a market" />
           </SelectTrigger>
@@ -56,9 +68,18 @@ export default function Home() {
             <SelectItem value="bybit">Bybit</SelectItem>
           </SelectContent>
         </Select>
-        {errors.market && (
-          <p className="text-sm text-red-500">Market is required</p>
-        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="market">Select Market</Label>
+        <Select required onValueChange={(value) => {setValue("formData.market", value);}}>
+          <SelectTrigger>
+            <SelectValue placeholder="Choose a market" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="spot">Spot</SelectItem>
+            <SelectItem value="futures">Futures</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Button type="submit" className="w-full">

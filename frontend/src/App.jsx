@@ -7,11 +7,11 @@ function App() {
 
   return (
     <>
-      {/* <Result/> */}
       <div className='min-h-lvw'>
         <Navbar/>
         <div className='pt-10 p-20'>
           <Home/>
+          {/* <Result/> */}
         </div>
       </div>
     </>

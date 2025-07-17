@@ -22,7 +22,7 @@ async def getData(inputData:exchangesSymbolData):
                 ohlcv=exchange.fetch_ohlcv(symbol, timeframe='1d', limit=inputData.limit)
                 df = pd.DataFrame(ohlcv, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
                 df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
-                filename:str = f"{sym.upper()}_{inputData.market}_{ex}.csv"
+                filename:str = f"{sym.upper()}_{inputData.market.lower()}_{ex.lower()}.csv"
                 df.to_csv(filename, index=False)
                 print(f"Data for saved on {filename}:\n")
             

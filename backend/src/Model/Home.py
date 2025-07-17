@@ -5,7 +5,7 @@ class exchangesSymbolData(BaseModel):
     exchanges:List[str]
     symbols:List[str]
     market:str
-    limit:int
+    limit:int=500
     leverage:int|None=None
 
     
