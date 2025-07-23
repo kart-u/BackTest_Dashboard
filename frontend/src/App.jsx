@@ -11,8 +11,8 @@ function App() {
       <div className='min-h-lvw'>
         <Navbar/>
         <div className='pt-10 p-20'>
-          {/* <Home/> */}
-          <BuildStrategy/>
+          <Home/>
+          {/* <BuildStrategy/> */}
           {/* <Result/> */}
         </div>
       </div>

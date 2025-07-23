@@ -80,7 +80,7 @@ export const modelAndChart = createSlice({
   initialState,
   reducers: {
     setExchange:(state,action) => {
-        state.exchange=action.payload.exchange;
+        state.exchange=action.payload;
     },
     setStrategy: (state,action) => {
         let ref=state.strategyParams

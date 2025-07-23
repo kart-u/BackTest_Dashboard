@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,9 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import axios from "axios";
+import { useSelector,useDispatch } from "react-redux";
+import { setExchange } from "../redux/features/modelAndChart";
+
 
 export default function Home() {
   const {
@@ -20,15 +23,18 @@ export default function Home() {
     formState: { errors },
   } = useForm();
   const [isloading,setLoading]=useState(false);
+  const dispatch=useDispatch()
+  
   const onSubmit = (data) => {
+    dispatch(setExchange(data.formData))
     setLoading(true)
-    console.log("Submitted data:", data.formData);
-    axios.post("/api/linkMethod",data.formData).then(
+
+    axios.post("http://127.0.0.1:8000/api/linkMethod",data.formData).then(
       (res)=>{
-        setLoading(false)
         console.log(res.status)
       }
-    ).finally(()=>console.log('done'))
+    ).catch((err)=>(console.log(err)))
+    .finally(()=>{console.log('done');setLoading(false)})
   };
   if(isloading){
     return(
