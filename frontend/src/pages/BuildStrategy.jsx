@@ -7,20 +7,11 @@ import axios from "axios";
 import ChartAreaInteractive from "../components/Chart";
 import { useSelector, useDispatch } from 'react-redux'
 import { setStrategy,setExecutionParams,setRiskParams } from "../redux/features/modelAndChart";
+import { useLoaderData } from "react-router";
 
 export default function BuildStrategy() {
-    const [chartData, setChartData] = useState([])
+    const chartData=useLoaderData()
     const dispatch=useDispatch();
-    const state=useSelector((state)=>state.strategyParams)
-    useEffect(() => {
-        axios.post("http://127.0.0.1:8000/api/graphOHLCV?Limit=99", {
-            exchange: "kraken",
-            symbol: "BTC",
-            market: "spot",
-        }).then((res) => {
-            setChartData(res.data)
-        })
-    }, []);
     const handleSubmit=()=>{
         console.log(state)
     }

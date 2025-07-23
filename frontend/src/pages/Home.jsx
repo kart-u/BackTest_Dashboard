@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { useSelector,useDispatch } from "react-redux";
 import { setExchange } from "../redux/features/modelAndChart";
-
+import { useNavigate } from "react-router";
 
 export default function Home() {
   const {
@@ -24,18 +24,20 @@ export default function Home() {
   } = useForm();
   const [isloading,setLoading]=useState(false);
   const dispatch=useDispatch()
-  
-  const onSubmit = (data) => {
-    dispatch(setExchange(data.formData))
-    setLoading(true)
+  const navigate=useNavigate();
 
+  const onSubmit = async (data) => {
+    setLoading(true)
+    dispatch(setExchange(data.formData));
     axios.post("http://127.0.0.1:8000/api/linkMethod",data.formData).then(
       (res)=>{
         console.log(res.status)
+        navigate('/strategy')
       }
-    ).catch((err)=>(console.log(err)))
-    .finally(()=>{console.log('done');setLoading(false)})
+    ).catch((err)=>{setLoading(false);console.log(err)})
   };
+
+
   if(isloading){
     return(
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm">

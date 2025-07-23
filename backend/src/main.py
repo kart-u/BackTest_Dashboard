@@ -4,7 +4,7 @@ from API.Strategy import main as strategy
 from fastapi.middleware.cors import CORSMiddleware
 
 origins=[
-    "http://localhost:5173"
+    "*"
 ]
 
 app=FastAPI()
