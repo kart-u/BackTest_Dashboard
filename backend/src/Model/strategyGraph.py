@@ -2,8 +2,8 @@ from pydantic import BaseModel
 from typing import List
 
 class graphParams(BaseModel):
-    exchange:str
-    symbol:str
+    exchanges:str
+    symbols:str
     market:str
 
 class EMA(BaseModel):

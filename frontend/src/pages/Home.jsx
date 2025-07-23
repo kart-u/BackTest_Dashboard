@@ -23,7 +23,7 @@ export default function Home() {
   const onSubmit = (data) => {
     setLoading(true)
     console.log("Submitted data:", data.formData);
-    axios.post("http://127.0.0.1:8000/api/linkMethod",data.formData).then(
+    axios.post("/api/linkMethod",data.formData).then(
       (res)=>{
         setLoading(false)
         console.log(res.status)

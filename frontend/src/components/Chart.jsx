@@ -23,7 +23,7 @@ const chartConfig = {
     label: "Visitors",
   },
   desktop: {
-    label: "Desktop",
+    label: "Close",
     color: "var(--chart-1)",
   }
 }
@@ -33,13 +33,13 @@ export default function ChartAreaInteractive(props) {
   const VISIBLE_COUNT = 50;
   const [mousedown, setMouseDown] = useState(false)
   const [visibleDate, setVisibleDate] = useState(chartData.length - VISIBLE_COUNT)
-
+  
   const flag = useRef(null)
   const visibleDateRef = useRef(visibleDate)
   const startx = useRef(null)
-
-
-
+  
+  
+  
   const handleMouseDown = (e) => {
     setMouseDown(true)
     startx.current = e.clientX;
@@ -103,7 +103,7 @@ export default function ChartAreaInteractive(props) {
               </defs>
               <CartesianGrid vertical={false} />
               <XAxis
-                dataKey="date"
+                dataKey="timestamp"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -133,7 +133,7 @@ export default function ChartAreaInteractive(props) {
                 }
               />
               <Area
-                dataKey="desktop"
+                dataKey="close"
                 type="linear"
                 fill="url(#fillDesktop)"
                 stroke="green"
