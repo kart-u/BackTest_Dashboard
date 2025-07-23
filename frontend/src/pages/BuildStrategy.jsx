@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import axios from "axios";
 import ChartAreaInteractive from "../components/Chart";
 import { useSelector, useDispatch } from 'react-redux'
-import { setStrategyTradeType } from "../redux/features/modelAndChart";
+import { setStrategy,setExecutionParams,setRiskParams } from "../redux/features/modelAndChart";
 
 export default function BuildStrategy() {
     const [chartData, setChartData] = useState([])
-    const state = useSelector((state) => state)
+    const dispatch=useDispatch();
+    const state=useSelector((state)=>state.strategyParams)
     useEffect(() => {
         axios.post("http://127.0.0.1:8000/api/graphOHLCV?Limit=99", {
             exchange: "kraken",
@@ -20,6 +21,9 @@ export default function BuildStrategy() {
             setChartData(res.data)
         })
     }, []);
+    const handleSubmit=()=>{
+        console.log(state)
+    }
     return (
         <div className="p-6 max-w-4xl mx-auto space-y-6">
             <h1 className="text-2xl font-bold">Closing Price
@@ -36,32 +40,28 @@ export default function BuildStrategy() {
                             <Label className='p-1'>EMA Small (span)</Label>
                             <Input
                                 type="number"
-                                value={state.strategyParams.emaSmall}
-                                onChange={(e) => setStrategyTradeType(['emaSmall',e.target.value])}
+                                onChange={(e) => (dispatch(setStrategy(['emaSmall',e.target.value])))}
                             />
                         </div>
                         <div>
                             <Label className='p-1'>EMA Large (span)</Label>
                             <Input
                                 type="number"
-                                value={state.strategyParams.emaLarge}
-                                onChange={(e) => setStrategyTradeType(['emaLarge',e.target.value])}
+                                onChange={(e) => (dispatch(setStrategy(['emaLarge',e.target.value])))}
                             />
                         </div>
                         <div>
                             <Label className='p-1'>RSI Period</Label>
                             <Input
                                 type="number"
-                                value={state.strategyParams.rsi}
-                                onChange={(e) => setStrategyTradeType(['rsi',e.target.value])}
+                                onChange={(e) => (dispatch(setStrategy(['rsi',e.target.value])))}
                             />
                         </div>
                         <div>
                             <Label className='p-1'>MACD Signal Period</Label>
                             <Input
                                 type="number"
-                                value={state.strategyParams.macdSignal}
-                                onChange={(e) => setStrategyTradeType(['rsi',e.target.value])}
+                                onChange={(e) => (dispatch(setStrategy(['macdSignal',e.target.value])))}
                             />
                         </div>
                     </div>
@@ -72,10 +72,12 @@ export default function BuildStrategy() {
                 <CardContent className="space-y-4">
                     <h2 className="text-lg font-semibold">Define Conditions</h2>
                     <div className="grid grid-cols-4 gap-6 p-4">
-                        {['Long Entry', 'Long Exit', 'Short Entry', 'Short Exit'].map((tp) => (
+                        {['longEnter', 'longExit', 'shortEnter', 'shortExit'].map((tp) => (
                             <div key={tp} className="space-y-4">
                                 
-                                <h3 className="text-center text-lg font-semibold border-b pb-2">{tp}</h3>
+                                <h3 className="text-center text-lg font-semibold border-b pb-2">{
+                                        tp.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ").map((str)=>(str[0].toUpperCase()+str.slice(1).toLowerCase())).join(" ")
+                                    }</h3>
 
                                 {["EMAC", "MACDC", "RSIC"].map((rule) => (
                                     <div key={rule} className="space-y-2 border rounded-lg p-3 shadow-sm">
@@ -83,14 +85,20 @@ export default function BuildStrategy() {
                                         {(rule === "EMAC"|| rule==="MACDC") ? (
                                             <div className="flex items-center justify-between space-x-2">
                                                 <Label className="text-sm">{rule.slice(0,rule.length-1)} Small</Label>
-                                                <Input className="w-16" />
+                                                <Input className="w-16" onChange={(e)=>(dispatch(setStrategy([
+                                                    tp,rule.slice(0,rule.length-1).toLowerCase(),'relation',e.target.value
+                                                ])))}/>
                                                 <Label className="text-sm">{rule.slice(0,rule.length-1)} Large</Label>
                                             </div>
                                         ) : (
                                             <div className="flex items-center justify-between space-x-2">
                                                 <Label className="text-sm">{rule.slice(0, rule.length - 1)}</Label>
-                                                <Input className="w-16" />
-                                                <Input className="w-20" type="number"/>
+                                                <Input className="w-16" onChange={(e)=>(dispatch(setStrategy([
+                                                    tp,rule.slice(0,rule.length-1).toLowerCase(),'relation',e.target.value
+                                                ])))} />
+                                                <Input className="w-20" type="number" onChange={(e)=>(dispatch(setStrategy([
+                                                    tp,rule.slice(0,rule.length-1).toLowerCase(),'value',e.target.value
+                                                ])))}/>
                                             </div>
                                         )}
                                     </div>
@@ -104,18 +112,12 @@ export default function BuildStrategy() {
             <Card>
                 <CardContent className="space-y-4">
                     <h2 className="text-lg font-semibold">Trade Rules</h2>
-                    {["longEnter", "longExit", "shortEnter", "shortExit"].map((rule) => (
-                        <div key={rule} className="space-y-2">
-                            <Label className="capitalize">{rule.replace(/([A-Z])/g, " $1")}</Label>
+                    {["longEnter", "longExit", "shortEnter", "shortExit"].map((tp) => (
+                        <div key={tp} className="space-y-2">
+                            <Label className="capitalize">{tp.replace(/([a-z])([A-Z])/g, "$1 $2").split(" ").map((str)=>(str[0].toUpperCase()+str.slice(1).toLowerCase())).join(" ")}</Label>
                             <Input
-                                placeholder="Condition (e.g., EMA && RSI)"
-                                value={strategy[rule].condition}
-                                onChange={(e) =>
-                                    setStrategy({
-                                        ...strategy,
-                                        [rule]: { ...strategy[rule], condition: e.target.value },
-                                    })
-                                }
+                                placeholder="Condition (e.g., EMAC && RSIC)"
+                                onChange={(e)=>(dispatch(setStrategy([tp,'condition',e.target.value])))}
                             />
                         </div>
                     ))}
@@ -131,40 +133,35 @@ export default function BuildStrategy() {
                             <Label className='p-1'>Leverage</Label>
                             <Input
                                 type="number"
-                                value={execution.leverage}
-                                onChange={(e) => setExecution({ ...execution, leverage: e.target.value })}
+                                onChange={(e) => dispatch(setExecutionParams(['leverage',e.target.value]))}
                             />
                         </div>
                         <div>
                             <Label className='p-1'>Fee (bps)</Label>
                             <Input
                                 type="number"
-                                value={execution.feeBps}
-                                onChange={(e) => setExecution({ ...execution, feeBps: e.target.value })}
+                                onChange={(e) => dispatch(setExecutionParams(['feeBps',e.target.value]))}
                             />
                         </div>
                         <div>
                             <Label className='p-1'>Portfolio Size</Label>
                             <Input
                                 type="number"
-                                value={execution.portfolio}
-                                onChange={(e) => setExecution({ ...execution, portfolio: e.target.value })}
+                                onChange={(e) => dispatch(setExecutionParams(['portfolio',e.target.value]))}
                             />
                         </div>
                         <div>
                             <Label className='p-1'>Stop Loss (%)</Label>
                             <Input
                                 type="number"
-                                value={risk.stopLoss}
-                                onChange={(e) => setRisk({ ...risk, stopLoss: e.target.value })}
+                                onChange={(e) => dispatch(setRiskParams(['stopLoss',e.target.value]))}
                             />
                         </div>
                         <div>
                             <Label className='p-1'>Take Profit (%)</Label>
                             <Input
                                 type="number"
-                                value={risk.takeProfit}
-                                onChange={(e) => setRisk({ ...risk, takeProfit: e.target.value })}
+                                onChange={(e) => dispatch(setRiskParams(['takeProfit',e.target.value]))}
                             />
                         </div>
                     </div>

@@ -15,7 +15,7 @@ const initialState = {
             relation:""
         },
         rsi:{
-            value:0,
+            value:"",
             relation:""
         },
         condition:""
@@ -28,7 +28,7 @@ const initialState = {
             relation:""
         },
         rsi:{
-            value:0,
+            value:"",
             relation:""
         },
         condition:""
@@ -41,7 +41,7 @@ const initialState = {
             relation:""
         },
         rsi:{
-            value:0,
+            value:"",
             relation:""
         },
         condition:""
@@ -54,24 +54,24 @@ const initialState = {
             relation:""
         },
         rsi:{
-            value:0,
+            value:"",
             relation:""
         },
         condition:""
     },
-    emaSmall:0,
-    emaLarge:0,
-    rsi:0,
-    macdSignal:0
+    emaSmall:"",
+    emaLarge:"",
+    rsi:"",
+    macdSignal:""
   },
   executionParams:{
-    leverage:0,
-    feeBps:0,
-    portfolio:0
+    leverage:"",
+    feeBps:"",
+    portfolio:""
   },
   riskParams:{
-    stopLoss:0,
-    takeProfit:0
+    stopLoss:"",
+    takeProfit:""
   },
 }
 
@@ -82,26 +82,31 @@ export const modelAndChart = createSlice({
     setExchange:(state,action) => {
         state.exchange=action.payload.exchange;
     },
-    setStrategyTradeType: (state,action) => {
+    setStrategy: (state,action) => {
         let ref=state.strategyParams
-        for(let i=0;i<action.payload.length-1;i++){
+        for(let i=0;i<action.payload.length-2;i++){
             ref=ref[action.payload[i]]
         }
         ref[action.payload[action.payload.length - 2]]=action.payload[action.payload.length-1];
     },
-    setStrategyIndicators: (state, action) => {
-      state[action.payload[0]] = action.payload[1];
-    },
     setExecutionParams: (state, action) => {
-      state[action.payload[0]] = action.payload[1];
+      let ref=state.executionParams
+        for(let i=0;i<action.payload.length-2;i++){
+            ref=ref[action.payload[i]]
+        }
+        ref[action.payload[action.payload.length - 2]]=action.payload[action.payload.length-1];
     },
     setRiskParams: (state, action) => {
-      state[action.payload[0]] = action.payload[1];
+      let ref=state.riskParams
+        for(let i=0;i<action.payload.length-2;i++){
+            ref=ref[action.payload[i]]
+        }
+        ref[action.payload[action.payload.length - 2]]=action.payload[action.payload.length-1];
     },
 
   },
 })
 
-export const { setExchange, setStrategyTradeType, setStrategyIndicators, setExecutionParams, setRiskParams} = modelAndChart.actions
+export const { setExchange, setStrategy, setExecutionParams, setRiskParams} = modelAndChart.actions
 
 export default modelAndChart.reducer
