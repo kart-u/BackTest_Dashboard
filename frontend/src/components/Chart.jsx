@@ -17,17 +17,6 @@ import {
 
 
 
-
-const chartConfig = {
-  visitors: {
-    label: "Visitors",
-  },
-  desktop: {
-    label: "Close",
-    color: "var(--chart-1)",
-  }
-}
-
 export default function ChartAreaInteractive(props) {
   const chartData=props.chartData
   const VISIBLE_COUNT = 50;
@@ -83,8 +72,13 @@ export default function ChartAreaInteractive(props) {
           onMouseLeave={handleMouseUp}
         >
           <ChartContainer
-            config={chartConfig}
             className="aspect-auto h-[400px] min-w-auto"
+            config={{
+              [props.x]: {
+                label: props.x,      // what to display in legend
+                color: "green"       // legend color indicator
+              }
+            }}
           >
             <AreaChart data={filteredData}>
               <defs>
@@ -103,7 +97,8 @@ export default function ChartAreaInteractive(props) {
               </defs>
               <CartesianGrid vertical={false} />
               <XAxis
-                dataKey="timestamp"
+                dataKey={props.y}
+                name={props.x}
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
@@ -133,7 +128,8 @@ export default function ChartAreaInteractive(props) {
                 }
               />
               <Area
-                dataKey="close"
+                dataKey={props.x}
+                name={props.x}
                 type="linear"
                 fill="url(#fillDesktop)"
                 stroke="green"

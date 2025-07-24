@@ -296,7 +296,6 @@ def atindex(args:Tuple):
 def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int,
                      strategy:strategyParams,execution:executionParams,risk:riskParams
                     ):
-    # print(length)
     flag=dict()
     maxDrawdown=0
     peak=0
@@ -311,6 +310,8 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
             "pnl": 0
         } for key in dataframes.keys()
     }
+
+    print(length)
     start = max([x for x in [strategy.emaLarge, strategy.emaSmall, strategy.rsi, strategy.macdSignal] if x is not None] + [0])             
     for index in range(length):
         if index<start:
@@ -336,7 +337,7 @@ def backtestParallel(dataframes:Dict[Tuple[str,str,str],pd.DataFrame],length:int
         df.loc[index]={'equity':equity,'maxDrawdown':maxDrawdown,'totalTrades':total,'winTrades':win,'pnl':pnl}
         # print(index)
         
-    df['returns'] = df['equity'].pct_change().fillna(0)
+    df['returns'] = df['equity']-execution.portfolio
     df['sharpe'] = df['returns'].mean()/df["returns"].std()
     firstKey = next(iter(dataframes))
     df['timestamp']=dataframes[firstKey]['timestamp']

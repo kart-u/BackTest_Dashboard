@@ -3,14 +3,14 @@
 import React from "react";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
-  NavigationMenuTrigger,
   NavigationMenuViewport,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { Link } from "react-router";
+
 
 export default function Navbar() {
   return (
@@ -22,17 +22,13 @@ export default function Navbar() {
           <NavigationMenuList className="flex space-x-6">
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <a href="/" className={navigationMenuTriggerStyle()}>
-                  Home
-                </a>
+                <Link to="/" className={navigationMenuTriggerStyle()}>Home</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 
             <NavigationMenuItem>
               <NavigationMenuLink asChild>
-                <a href="/about" className={navigationMenuTriggerStyle()}>
-                  Change Strategy
-                </a>
+                <Link to="/strategy" className={navigationMenuTriggerStyle()}>Change Strategy</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
 

@@ -84,7 +84,7 @@ async def dataOptions():
 async def backtest(strategyParams:Annotated[strategyParams,Body()],
                    executionParams:Annotated[executionParams,Body()],
                    riskParams:Annotated[riskParams,Body()],
-                   selected:Annotated[exchangesSymbolData,Body()]
+                   exchange:Annotated[exchangesSymbolData,Body()]
                    ):
     
     if not verifyStrategy(strategyParams):
@@ -92,18 +92,18 @@ async def backtest(strategyParams:Annotated[strategyParams,Body()],
     
 
     dataframe:Dict[Tuple[str,str,str],]=dict()
-    for exchange in selected.exchanges:
-        for symbol in selected.symbols:
-            market=selected.market
+    for ex in exchange.exchanges:
+        for symbol in exchange.symbols:
+            market=exchange.market
             path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../",
-                    f"{symbol.upper()}_{market.lower()}_{exchange.lower()}.csv"
+                    f"{symbol.upper()}_{market.lower()}_{ex.lower()}.csv"
                     ))
             if not os.path.isfile(path):
                 raise HTTPException(status_code=400,detail="File not found")
             df=pd.read_csv(path)
             calculateIndicator(strategyParams,df)
             length=len(df)
-            dataframe[(symbol.upper(),market.lower(),exchange.lower())]=df
+            dataframe[(symbol.upper(),market.lower(),ex.lower())]=df
 
     loop = asyncio.get_event_loop()
     df = await loop.run_in_executor(

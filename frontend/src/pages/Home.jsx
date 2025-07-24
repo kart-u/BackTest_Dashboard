@@ -29,12 +29,12 @@ export default function Home() {
   const onSubmit = async (data) => {
     setLoading(true)
     dispatch(setExchange(data.formData));
-    axios.post("http://127.0.0.1:8000/api/linkMethod",data.formData).then(
-      (res)=>{
-        console.log(res.status)
-        navigate('/strategy')
-      }
-    ).catch((err)=>{setLoading(false);console.log(err)})
+    navigate('/strategy')
+    // axios.post("http://127.0.0.1:8000/api/linkMethod",data.formData).then(
+    //   (res)=>{
+    //     console.log(res.status)
+    //   }
+    // ).catch((err)=>{setLoading(false);console.log(err)})
   };
 
 
